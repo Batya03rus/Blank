@@ -2,6 +2,8 @@ using System;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+using System.Runtime.InteropServices;
 
 namespace Blank
 {
@@ -15,11 +17,23 @@ namespace Blank
         private readonly PageSetupDialog _pageSetup = new PageSetupDialog();
         private readonly PrintDialog _printDialog = new PrintDialog();
 
+        // Для перетаскивания формы без рамки
+        public const int WM_NCLBUTTONDOWN = 0xA1;
+        public const int HTCAPTION = 0x2;
+
+        [DllImport("user32.dll")]
+        public static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+
         public Form1()
         {
             InitializeComponent();
-            SetupPrintMenu();          // меню «Файл» сверху
-            WirePrinting();            // привязка событий печати
+            SetupPrintMenu();
+            WirePrinting();
+            this.MouseDown += Form1_MouseDown;
         }
 
         // ====== ТВОИ ОБРАБОТЧИКИ (оставил без изменений) ======
@@ -235,6 +249,15 @@ namespace Blank
         private void guna2ControlBox2_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(this.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+            }
         }
     }
 }
